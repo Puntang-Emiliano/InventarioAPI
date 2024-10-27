@@ -1,5 +1,6 @@
 ﻿using InventarioAPI.Data;
 using InventarioAPI.Models;
+using InventarioAPI.ModelsDTO;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 

@@ -1,4 +1,4 @@
-﻿namespace InventarioAPI.Models
+﻿namespace InventarioAPI.ModelsDTO
 {
     public class ModificarCategoriaDTO
     {

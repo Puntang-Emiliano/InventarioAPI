@@ -14,8 +14,8 @@ namespace InventarioAPI.Models
         public int ProveedorId { get; set; }
         public Proveedor Proveedor { get; set; }
 
-        // Relación con DetallesOrdenCompra
-        public ICollection<DetalleOrdenCompra> DetallesOrdenCompra { get; set; }
+        // Relación con DetalleOrdenCompra
+        public ICollection<DetalleOrdenCompra> DetalleOrdenCompra { get; set; }
     }
 
 }
