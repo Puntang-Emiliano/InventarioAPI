@@ -8,7 +8,7 @@ namespace InventarioAPI.ModelsDTO
         public decimal Total { get; set; }
         public int ProveedorId { get; set; }
 
-        [JsonIgnore]
-        public ICollection<DetalleOrdenCompraDTO> DetalleOrdenCompra { get; set; }
+       
+        public ICollection<DetalleOrdenCompra1DTO> DetalleOrdenCompra { get; set; }
     }
 }

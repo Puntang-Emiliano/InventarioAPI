@@ -16,7 +16,7 @@ namespace InventarioAPI.Data
         public DbSet<Producto> Productos { get; set; }
         public DbSet<Cliente> Clientes { get; set; }
         public DbSet<Pedido> Pedidos { get; set; }
-        public DbSet<DetallePedido> DetallesPedidos { get; set; }
+        public DbSet<DetallePedido> DetallePedido { get; set; }
         public DbSet<OrdenCompra> OrdenCompra { get; set; }
         public DbSet<DetalleOrdenCompra> DetalleOrdenCompra { get; set; }
         public DbSet<Rol> Roles { get; set; }

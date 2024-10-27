@@ -13,8 +13,8 @@ namespace InventarioAPI.Models
         public int ClienteId { get; set; }
         public Cliente Cliente { get; set; }
 
-        // Relación con DetallesPedido
-        public ICollection<DetallePedido> DetallesPedido { get; set; }
+        // Relación con DetallePedido
+        public ICollection<DetallePedido> DetallePedido { get; set; }
     }
 
 }

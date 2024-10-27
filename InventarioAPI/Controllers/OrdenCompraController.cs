@@ -34,7 +34,7 @@ namespace InventarioAPI.Controllers
                     Total = o.Total,
                     ProveedorId = o.ProveedorId,
                     NombreProveedor = o.Proveedor.Nombre,
-                    DetalleOrdenCompra = o.DetalleOrdenCompra.Select(d => new DetalleOrdenCompraDTO
+                    DetalleOrdenCompra = o.DetalleOrdenCompra.Select(d => new DetalleOrdenCompra1DTO
                     {
                         ProductoId = d.ProductoId,
                         Cantidad = d.Cantidad,
@@ -61,7 +61,7 @@ namespace InventarioAPI.Controllers
                     Total = o.Total,
                     ProveedorId = o.ProveedorId,
                     NombreProveedor = o.Proveedor.Nombre,
-                    DetalleOrdenCompra = o.DetalleOrdenCompra.Select(d => new DetalleOrdenCompraDTO
+                    DetalleOrdenCompra = o.DetalleOrdenCompra.Select(d => new DetalleOrdenCompra1DTO
                     {
                         ProductoId = d.ProductoId,
                         Cantidad = d.Cantidad,

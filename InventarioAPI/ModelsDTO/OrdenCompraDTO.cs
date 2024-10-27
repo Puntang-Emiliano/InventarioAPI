@@ -8,6 +8,6 @@
         public decimal Total { get; set; }
         public int ProveedorId { get; set; }
         public string NombreProveedor { get; set; }
-        public ICollection<DetalleOrdenCompraDTO> DetalleOrdenCompra { get; set; }
+        public ICollection<DetalleOrdenCompra1DTO> DetalleOrdenCompra { get; set; }
     }
 }
