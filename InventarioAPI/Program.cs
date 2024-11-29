@@ -11,11 +11,29 @@ using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configurar el manejo de ciclos de referencia
+//// Configurar el manejo de ciclos de referencia
+//builder.Services.AddControllers()
+//    .AddJsonOptions(options =>
+//    {
+//        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
+//    });
+
+
+//builder.Services.AddControllers()
+//    .AddJsonOptions(options =>
+//    {
+//        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+//        options.JsonSerializerOptions.PropertyNamingPolicy = null; 
+//    });
+
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
+       
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;       
+        options.JsonSerializerOptions.PropertyNamingPolicy = null;        
+        options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;       
+        options.JsonSerializerOptions.WriteIndented = true;
     });
 
 

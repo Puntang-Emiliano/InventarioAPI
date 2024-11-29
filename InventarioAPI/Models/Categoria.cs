@@ -10,7 +10,7 @@ namespace InventarioAPI.Models
         public string Descripcion { get; set; }
 
       
-        //public ICollection<Producto> Productos { get; set; }
+        public ICollection<Producto> Productos { get; set; }
     }
 
 }

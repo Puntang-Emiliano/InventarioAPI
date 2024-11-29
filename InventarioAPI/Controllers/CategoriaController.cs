@@ -1,6 +1,7 @@
 ﻿using InventarioAPI.Data;
 using InventarioAPI.Models;
 using InventarioAPI.ModelsDTO;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,6 +9,7 @@ namespace InventarioAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+
     public class CategoriaController : Controller
     {
         
