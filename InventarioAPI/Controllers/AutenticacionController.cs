@@ -28,19 +28,17 @@ namespace InventarioAPI.Controllers
         [Route("Validar")]
         public async Task<IActionResult> Validar([FromBody] UsuarioLoginDTO request)
         {
-            // Validar que el request no sea nulo
+            
             if (request == null || string.IsNullOrEmpty(request.email) || string.IsNullOrEmpty(request.contraseña))
             {
                 return BadRequest("El email y la contraseña son requeridos.");
             }
 
-            // Encriptar la contraseña con SHA-256
             using (var sha256 = SHA256.Create())
             {
                 var hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(request.contraseña));
                 var hashedContraseña = Convert.ToBase64String(hashBytes);
 
-                // Buscar el usuario en la base de datos
                 var usuarioLogin = await _context.Usuarios
                     .FirstOrDefaultAsync(x => x.Email.Equals(request.email) && x.Contraseña.Equals(hashedContraseña));
 

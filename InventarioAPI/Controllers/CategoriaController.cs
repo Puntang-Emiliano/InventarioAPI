@@ -20,7 +20,8 @@ namespace InventarioAPI.Controllers
             _context = context;
         }
 
-      // trae todas las Categorias
+        // trae todas las Categorias
+        [Authorize]
       [HttpGet(Name = "ObtenerTodosCat")]
         public async Task<IActionResult> ObtenerTodos()
         {

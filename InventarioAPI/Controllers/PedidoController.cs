@@ -29,7 +29,7 @@ namespace InventarioAPI.Controllers
                     IdPedido = p.IdPedido,
                     FechaPedido = p.FechaPedido,
                     Total = p.Total,
-                    ClienteId = p.ClienteId,
+                    IdUsuario = p.IdUsuario,
                     Estado = p.Estado,
                     DetallesPedido = p.DetallePedido.Select(dp => new DetallePedidoDTO
                     {
@@ -55,7 +55,7 @@ namespace InventarioAPI.Controllers
                     IdPedido = p.IdPedido,
                     FechaPedido = p.FechaPedido,
                     Total = p.Total,
-                    ClienteId = p.ClienteId,
+                    IdUsuario = p.IdUsuario,  
                     Estado = p.Estado,
                     DetallesPedido = p.DetallePedido.Select(dp => new DetallePedidoDTO
                     {
@@ -81,7 +81,7 @@ namespace InventarioAPI.Controllers
             {
                 FechaPedido = DateTime.Now,
                 Total = crearPedidoDto.Total,
-                ClienteId = crearPedidoDto.ClienteId,
+                IdUsuario = crearPedidoDto.IdUsuario,  
                 Estado = "Pendiente", // Estado inicial
                 DetallePedido = crearPedidoDto.DetallesPedido.Select(dp => new DetallePedido
                 {
@@ -101,7 +101,6 @@ namespace InventarioAPI.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutPedido(int id, ModificarEstadoPedidoDTO modificarEstadoDto)
         {
-          
             var pedidoExistente = await _context.Pedidos
                 .Include(p => p.DetallePedido)
                 .FirstOrDefaultAsync(p => p.IdPedido == id);
@@ -147,8 +146,6 @@ namespace InventarioAPI.Controllers
             return NoContent();
         }
 
-
-
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePedido(int id)
         {
@@ -168,10 +165,7 @@ namespace InventarioAPI.Controllers
             return NoContent();
         }
 
-
-
         // metodo para aceptar pedido y descontar stock
-
         [HttpPut("{id}/aceptar")]
         public async Task<IActionResult> AceptarPedido(int id)
         {
@@ -213,14 +207,12 @@ namespace InventarioAPI.Controllers
                     producto.Stock -= detalle.Cantidad;
                 }
 
-                pedido.Estado = "Procesado"; 
+                pedido.Estado = "Procesado";
             }
             await _context.SaveChangesAsync();
 
             return Ok("Pedido Procesado y stock actualizado.");
         }
-
-
 
         [HttpPut("{id}/rechazar")]
         public async Task<IActionResult> RechazarPedido(int id)
@@ -235,7 +227,7 @@ namespace InventarioAPI.Controllers
             }
             if (pedido.Estado == "Pendiente" || pedido.Estado == "Rechazado")
             {
-                pedido.Estado = "Rechazado"; 
+                pedido.Estado = "Rechazado";
             }
             else if (pedido.Estado == "Procesado")
             {
@@ -246,11 +238,11 @@ namespace InventarioAPI.Controllers
 
                     if (producto != null)
                     {
-                        producto.Stock += detalle.Cantidad; 
+                        producto.Stock += detalle.Cantidad;
                     }
                 }
 
-                pedido.Estado = "Rechazado";  
+                pedido.Estado = "Rechazado";
             }
             else
             {
@@ -261,7 +253,5 @@ namespace InventarioAPI.Controllers
 
             return Ok("Pedido rechazado y stock actualizado.");
         }
-
-
     }
 }

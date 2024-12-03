@@ -9,12 +9,8 @@ namespace InventarioAPI.Models
         public DateTime FechaPedido { get; set; } = DateTime.Now;
         public string Estado { get; set; }
         public decimal Total { get; set; }
+        public int IdUsuario { get; set; }
 
-        // Relación con Cliente
-        public int ClienteId { get; set; }
-        public Cliente Cliente { get; set; }
-
-        // Relación con DetallePedido
         public ICollection<DetallePedido> DetallePedido { get; set; }
     }
 

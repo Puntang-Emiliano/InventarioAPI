@@ -156,47 +156,15 @@ namespace InventarioAPI.Controllers
         }
 
 
-
-
-        //[HttpPost("ValidarCredencial")]
-        //public async Task<IActionResult> ValidarCredencial([FromBody] UsuarioLoginDTO usuario)
-        //{
-        //    // Encripta la contraseña proporcionada
-        //    using (var sha256 = SHA256.Create())
-        //    {
-        //        var hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(usuario.contraseña));
-        //        var contraseñaHash = Convert.ToBase64String(hashBytes);
-
-
-        //        var usuarioLogin = await _context.Usuarios
-        //            .FirstOrDefaultAsync(x => x.Email.Equals(usuario.email) && x.Contraseña.Equals(contraseñaHash));
-
-        //        if (usuarioLogin == null)
-        //        {
-        //            return NotFound("Usuario o contraseña incorrectos");
-        //        }
-
-        //        var usuarioResponse = new LoginResponseDto
-        //        {
-        //            IdUsuario = usuarioLogin.IdUsuario,
-        //            Nombre = usuarioLogin.Nombre,
-        //            Email = usuarioLogin.Email
-        //        };
-
-        //        return Ok(usuarioResponse);
-        //    }
-        //}
-
         [HttpPost("ValidarCredencial")]
         public async Task<IActionResult> ValidarCredencial([FromBody] UsuarioLoginDTO usuario)
         {
-            // Encripta la contraseña proporcionada
+            
             using (var sha256 = SHA256.Create())
             {
                 var hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(usuario.contraseña));
                 var contraseñaHash = Convert.ToBase64String(hashBytes);
 
-                // Realiza una sola consulta para obtener el usuario y verifica si existe.
                 var usuarioLogin = await _context.Usuarios
                     .Where(x => x.Email.Equals(usuario.email) && x.Contraseña.Equals(contraseñaHash))
                     .Select(x => new LoginResponseDto
@@ -208,13 +176,11 @@ namespace InventarioAPI.Controllers
                     })
                     .FirstOrDefaultAsync();
 
-                // Si el usuario no existe, retorna un error 404.
                 if (usuarioLogin == null)
                 {
                     return NotFound("Usuario o contraseña incorrectos");
                 }
 
-                // Retorna la respuesta con los datos del usuario autenticado.
                 return Ok(usuarioLogin);
             }
         }

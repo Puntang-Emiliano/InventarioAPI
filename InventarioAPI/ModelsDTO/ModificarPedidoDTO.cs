@@ -1,4 +1,5 @@
-﻿using InventarioAPI.ModelsDTO;
+﻿using InventarioAPI.Models;
+using InventarioAPI.ModelsDTO;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
@@ -8,8 +9,9 @@ namespace InventarioAPI.DTOs
     {
 
         public decimal Total { get; set; }
-        public int ClienteId { get; set; }
         public string Estado { get; set; } // Pendiente, Procesado, Rechazado
+        public int IdUsuario { get; set; }
+      
         public List<DetallePedidoDTO> DetallesPedido { get; set; }
     }
 
