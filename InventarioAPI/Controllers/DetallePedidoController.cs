@@ -22,7 +22,7 @@ namespace InventarioAPI.Controllers
         public async Task<ActionResult<IEnumerable<DetallePedidoDTO>>> GetDetallesPedido()
         {
             var detalles = await _context.DetallePedido
-                .Include(dp => dp.Producto) // Incluir la información del producto
+                .Include(dp => dp.Producto)
                 .Select(dp => new DetallePedidoDTO
                 {
                     IdDetallePedido = dp.IdDetallePedido,
@@ -39,7 +39,7 @@ namespace InventarioAPI.Controllers
         public async Task<ActionResult<DetallePedidoDTO>> GetDetallePedido(int id)
         {
             var detalle = await _context.DetallePedido
-                .Include(dp => dp.Producto) // Incluir la información del producto
+                .Include(dp => dp.Producto) 
                 .Where(dp => dp.IdDetallePedido == id)
                 .Select(dp => new DetallePedidoDTO
                 {

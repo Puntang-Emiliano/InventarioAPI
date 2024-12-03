@@ -68,7 +68,8 @@ namespace InventarioAPI.Controllers
                 Nombre = crearClienteDto.Nombre,
                 Email = crearClienteDto.Email,
                 Telefono = crearClienteDto.Telefono,
-                Direccion = crearClienteDto.Direccion
+                Direccion = crearClienteDto.Direccion,
+                Contraseña = crearClienteDto.Contraseña
             };
 
             _context.Clientes.Add(cliente);
@@ -101,6 +102,7 @@ namespace InventarioAPI.Controllers
             clienteExistente.Email = crearClienteDto.Email;
             clienteExistente.Telefono = crearClienteDto.Telefono;
             clienteExistente.Direccion = crearClienteDto.Direccion;
+            clienteExistente.Contraseña = crearClienteDto.Contraseña;
 
             _context.Entry(clienteExistente).State = EntityState.Modified;
             await _context.SaveChangesAsync();

@@ -8,11 +8,9 @@ namespace InventarioAPI.DTOs
     {
 
         public decimal Total { get; set; }
-
-
         public int ClienteId { get; set; }
-
-        public List<DetallePedidoDTO> DetallesPedido { get; set; } = new List<DetallePedidoDTO>();
+        public string Estado { get; set; } // Pendiente, Procesado, Rechazado
+        public List<DetallePedidoDTO> DetallesPedido { get; set; }
     }
 
    

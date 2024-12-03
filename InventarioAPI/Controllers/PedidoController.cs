@@ -30,6 +30,7 @@ namespace InventarioAPI.Controllers
                     FechaPedido = p.FechaPedido,
                     Total = p.Total,
                     ClienteId = p.ClienteId,
+                    Estado = p.Estado,
                     DetallesPedido = p.DetallePedido.Select(dp => new DetallePedidoDTO
                     {
                         IdDetallePedido = dp.IdDetallePedido,
@@ -55,6 +56,7 @@ namespace InventarioAPI.Controllers
                     FechaPedido = p.FechaPedido,
                     Total = p.Total,
                     ClienteId = p.ClienteId,
+                    Estado = p.Estado,
                     DetallesPedido = p.DetallePedido.Select(dp => new DetallePedidoDTO
                     {
                         IdDetallePedido = dp.IdDetallePedido,
@@ -72,7 +74,6 @@ namespace InventarioAPI.Controllers
             return Ok(pedido);
         }
 
-        // Crear un nuevo pedido
         [HttpPost]
         public async Task<ActionResult<PedidoDTO>> PostPedido(CrearPedidoDTO crearPedidoDto)
         {
@@ -81,6 +82,7 @@ namespace InventarioAPI.Controllers
                 FechaPedido = DateTime.Now,
                 Total = crearPedidoDto.Total,
                 ClienteId = crearPedidoDto.ClienteId,
+                Estado = "Pendiente", // Estado inicial
                 DetallePedido = crearPedidoDto.DetallesPedido.Select(dp => new DetallePedido
                 {
                     Cantidad = dp.Cantidad,
@@ -95,55 +97,58 @@ namespace InventarioAPI.Controllers
             return CreatedAtAction(nameof(GetPedido), new { id = pedido.IdPedido }, pedido);
         }
 
-        // Actualizar un pedido
+        // modificar solo el estado
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutPedido(int id, ModificarPedidoDTO modificarPedidoDto)
+        public async Task<IActionResult> PutPedido(int id, ModificarEstadoPedidoDTO modificarEstadoDto)
         {
+          
             var pedidoExistente = await _context.Pedidos
-                .Include(p => p.DetallePedido) 
+                .Include(p => p.DetallePedido)
                 .FirstOrDefaultAsync(p => p.IdPedido == id);
 
             if (pedidoExistente == null)
             {
                 return NotFound();
             }
+            var estadoAnterior = pedidoExistente.Estado;
+            var nuevoEstado = modificarEstadoDto.Estado;
 
-            pedidoExistente.Total = modificarPedidoDto.Total;
-            pedidoExistente.ClienteId = modificarPedidoDto.ClienteId;
-
-            foreach (var detalleDto in modificarPedidoDto.DetallesPedido)
+            if (estadoAnterior == "Procesado" && nuevoEstado != "Procesado")
             {
-                var detalleExistente = pedidoExistente.DetallePedido
-                    .FirstOrDefault(dp => dp.IdDetallePedido == detalleDto.IdDetallePedido);
-
-                if (detalleExistente != null)
+                foreach (var detalle in pedidoExistente.DetallePedido)
                 {
-             
-                    detalleExistente.Cantidad = detalleDto.Cantidad;
-                    detalleExistente.PrecioUnitario = detalleDto.PrecioUnitario;
-                    detalleExistente.ProductoId = detalleDto.ProductoId;
-                }
-                else
-                {
-
-                    var nuevoDetalle = new DetallePedido
+                    var producto = await _context.Productos.FindAsync(detalle.ProductoId);
+                    if (producto != null)
                     {
-                        Cantidad = detalleDto.Cantidad,
-                        PrecioUnitario = detalleDto.PrecioUnitario,
-                        ProductoId = detalleDto.ProductoId
-                    };
-                    pedidoExistente.DetallePedido.Add(nuevoDetalle);
+                        producto.Stock += detalle.Cantidad;
+                    }
+                }
+            }
+            else if (estadoAnterior != "Procesado" && nuevoEstado == "Procesado")
+            {
+                foreach (var detalle in pedidoExistente.DetallePedido)
+                {
+                    var producto = await _context.Productos.FindAsync(detalle.ProductoId);
+                    if (producto != null)
+                    {
+                        if (producto.Stock < detalle.Cantidad)
+                        {
+                            return BadRequest($"Stock insuficiente para el producto ID {detalle.ProductoId}");
+                        }
+                        producto.Stock -= detalle.Cantidad;
+                    }
                 }
             }
 
-            // Guardar los cambios en la base de datos
+            pedidoExistente.Estado = nuevoEstado;
+
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
 
 
-        // Eliminar un pedido
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePedido(int id)
         {
@@ -153,19 +158,110 @@ namespace InventarioAPI.Controllers
             {
                 return NotFound();
             }
-
-            // Eliminar los detalles de pedido relacionados
             if (pedido.DetallePedido != null && pedido.DetallePedido.Any())
             {
                 _context.DetallePedido.RemoveRange(pedido.DetallePedido);
             }
-
-            // Eliminar el pedido
             _context.Pedidos.Remove(pedido);
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
+
+
+
+        // metodo para aceptar pedido y descontar stock
+
+        [HttpPut("{id}/aceptar")]
+        public async Task<IActionResult> AceptarPedido(int id)
+        {
+            var pedido = await _context.Pedidos
+                .Include(p => p.DetallePedido)
+                .ThenInclude(dp => dp.Producto)
+                .FirstOrDefaultAsync(p => p.IdPedido == id);
+
+            if (pedido == null)
+            {
+                return NotFound("El pedido no existe.");
+            }
+            if (pedido.Estado == "Procesado" && (pedido.Estado == "Pendiente" || pedido.Estado == "Rechazado"))
+            {
+                foreach (var detalle in pedido.DetallePedido)
+                {
+                    var producto = await _context.Productos.FirstOrDefaultAsync(p => p.IdProducto == detalle.ProductoId);
+                    if (producto == null)
+                    {
+                        return NotFound($"Producto con ID {detalle.ProductoId} no encontrado.");
+                    }
+                    producto.Stock += detalle.Cantidad;
+                }
+            }
+            else if (pedido.Estado == "Pendiente")
+            {
+                foreach (var detalle in pedido.DetallePedido)
+                {
+                    var producto = await _context.Productos.FirstOrDefaultAsync(p => p.IdProducto == detalle.ProductoId);
+                    if (producto == null)
+                    {
+                        return NotFound($"Producto con ID {detalle.ProductoId} no encontrado.");
+                    }
+
+                    if (producto.Stock < detalle.Cantidad)
+                    {
+                        return BadRequest($"Stock insuficiente para el producto: {producto.Nombre}");
+                    }
+                    producto.Stock -= detalle.Cantidad;
+                }
+
+                pedido.Estado = "Procesado"; 
+            }
+            await _context.SaveChangesAsync();
+
+            return Ok("Pedido Procesado y stock actualizado.");
+        }
+
+
+
+        [HttpPut("{id}/rechazar")]
+        public async Task<IActionResult> RechazarPedido(int id)
+        {
+            var pedido = await _context.Pedidos
+                                        .Include(p => p.DetallePedido)
+                                        .FirstOrDefaultAsync(p => p.IdPedido == id);
+
+            if (pedido == null)
+            {
+                return NotFound("El pedido no existe.");
+            }
+            if (pedido.Estado == "Pendiente" || pedido.Estado == "Rechazado")
+            {
+                pedido.Estado = "Rechazado"; 
+            }
+            else if (pedido.Estado == "Procesado")
+            {
+                foreach (var detalle in pedido.DetallePedido)
+                {
+                    var producto = await _context.Productos
+                                                  .FirstOrDefaultAsync(p => p.IdProducto == detalle.ProductoId);
+
+                    if (producto != null)
+                    {
+                        producto.Stock += detalle.Cantidad; 
+                    }
+                }
+
+                pedido.Estado = "Rechazado";  
+            }
+            else
+            {
+                return BadRequest("El estado del pedido no es válido para esta acción.");
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok("Pedido rechazado y stock actualizado.");
+        }
+
 
     }
 }

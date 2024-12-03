@@ -19,6 +19,8 @@ namespace InventarioAPI.Models
         // Relación con Proveedor
         public int ProveedorId { get; set; }
         public Proveedor Proveedor { get; set; }
+
+        public string Imagen {  get; set; }
     }
 
 }

@@ -11,6 +11,7 @@ namespace InventarioAPI.Models
         public string Telefono { get; set; }
         public string Direccion { get; set; }
 
+        public string Contraseña { get; set; }
 
         public ICollection<Pedido> Pedidos { get; set; }
     }

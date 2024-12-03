@@ -32,11 +32,17 @@ namespace InventarioAPI.Controllers
                     Precio = p.Precio,
                     Stock = p.Stock,
                     CategoriaId = p.CategoriaId,
-                    ProveedorId = p.ProveedorId
-                }).ToListAsync();
+                    ProveedorId = p.ProveedorId,
+                    Imagen = string.IsNullOrEmpty(p.Imagen)
+                ? null
+                : $"{Request.Scheme}://{Request.Host}/Imagenes/{Path.GetFileName(p.Imagen)}"
+
+                })
+                .ToListAsync();
 
             return Ok(productos);
         }
+
         // Montramos un producto pasando un Id
         [HttpGet("{id}")]
         public async Task<ActionResult<ProductoDTO>> GetProducto(int id)
@@ -51,7 +57,8 @@ namespace InventarioAPI.Controllers
                     Precio = p.Precio,
                     Stock = p.Stock,
                     CategoriaId = p.CategoriaId,
-                    ProveedorId = p.ProveedorId
+                    ProveedorId = p.ProveedorId,
+                    Imagen = p.Imagen
                 }).FirstOrDefaultAsync();
 
             if (producto == null)
@@ -62,38 +69,51 @@ namespace InventarioAPI.Controllers
             return Ok(producto);
         }
 
-       // Insertamos un nuevo Producto
         [HttpPost]
-        public async Task<ActionResult<ProductoDTO>> PostProducto(CrearProductoDTO crearProductoDto)
+        public async Task<ActionResult<ProductoDTO>> PostProducto([FromBody] CrearProductoDTO crearProductoDto)
         {
-            var producto = new Producto
+            try
             {
-                Nombre = crearProductoDto.Nombre,
-                Descripcion = crearProductoDto.Descripcion,
-                Precio = crearProductoDto.Precio,
-                Stock = crearProductoDto.Stock,
-                CategoriaId = crearProductoDto.CategoriaId,
-                ProveedorId = crearProductoDto.ProveedorId
-            };
+               
+                var producto = new Producto
+                {
+                    Nombre = crearProductoDto.Nombre,
+                    Descripcion = crearProductoDto.Descripcion,
+                    Precio = crearProductoDto.Precio,
+                    Stock = crearProductoDto.Stock,
+                    CategoriaId = crearProductoDto.CategoriaId,
+                    ProveedorId = crearProductoDto.ProveedorId,
+                    Imagen = crearProductoDto.Imagen
+                };
 
-            _context.Productos.Add(producto);
-            await _context.SaveChangesAsync();
+                _context.Productos.Add(producto);
+                await _context.SaveChangesAsync();
 
-            var productoDto = new ProductoDTO
+               
+                var productoDto = new ProductoDTO
+                {
+                    IdProducto = producto.IdProducto,
+                    Nombre = producto.Nombre,
+                    Descripcion = producto.Descripcion,
+                    Precio = producto.Precio,
+                    Stock = producto.Stock,
+                    CategoriaId = producto.CategoriaId,
+                    ProveedorId = producto.ProveedorId,
+                    Imagen = producto.Imagen
+                };
+
+                return CreatedAtAction(nameof(GetProducto), new { id = productoDto.IdProducto }, productoDto);
+            }
+            catch (Exception ex)
             {
-                IdProducto = producto.IdProducto,
-                Nombre = producto.Nombre,
-                Descripcion = producto.Descripcion,
-                Precio = producto.Precio,
-                Stock = producto.Stock,
-                CategoriaId = producto.CategoriaId,
-                ProveedorId = producto.ProveedorId
-            };
-
-            return CreatedAtAction(nameof(GetProducto), new { id = productoDto.IdProducto }, productoDto);
+                return BadRequest(new
+                {
+                    error = ex.Message,
+                    innerException = ex.InnerException?.Message
+                });
+            }
         }
 
-        //Eliminamos un producto pasandole el Id
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProducto(int id)
         {
@@ -118,37 +138,54 @@ namespace InventarioAPI.Controllers
         [HttpPut("{productoId:int}")]
         public async Task<IActionResult> Modificar([FromBody] ModificarProductoDTO productoDto, [FromRoute] int productoId)
         {
-            try
+            var productoExistente = await _context.Productos.FindAsync(productoId);
+
+            if (productoExistente == null)
             {
-                var productoExistente = await _context.Productos.FindAsync(productoId);
-
-                if (productoExistente != null)
-                {
-                    
-                    if (!string.IsNullOrEmpty(productoDto.Nombre))
-                        productoExistente.Nombre = productoDto.Nombre;
-
-                    if (!string.IsNullOrEmpty(productoDto.Descripcion))
-                        productoExistente.Descripcion = productoDto.Descripcion;
-
-                    if (productoDto.Precio >= 0) // valida que el precio no sea negativo
-                        productoExistente.Precio = productoDto.Precio;
-
-                    if (productoDto.Stock >= 0) // valida que el stock puede ser 0 o más
-                        productoExistente.Stock = productoDto.Stock;               
-
-                    _context.Productos.Update(productoExistente);
-                    await _context.SaveChangesAsync();
-
-                    return NoContent();
-                }
-
                 return NotFound();
             }
-            catch (Exception ex)
+
+            if (!string.IsNullOrEmpty(productoDto.Nombre))
+                productoExistente.Nombre = productoDto.Nombre;
+
+            if (!string.IsNullOrEmpty(productoDto.Descripcion))
+                productoExistente.Descripcion = productoDto.Descripcion;
+
+            if (productoDto.Precio >= 0)
+                productoExistente.Precio = productoDto.Precio;
+
+            if (productoDto.Stock >= 0)
+                productoExistente.Stock = productoDto.Stock;
+
+            if (!string.IsNullOrEmpty(productoDto.Imagen))
+                productoExistente.Imagen = productoDto.Imagen;
+
+            _context.Productos.Update(productoExistente);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+
+        // Guardar Imagen
+
+        [HttpPost("GuardarImagen")]
+        public async Task<string> GuardarImagen([FromForm] SubirImagen archivo)
+        {
+            var ruta = String.Empty;
+
+            if (archivo.Imagen.Length > 0)
             {
-                return BadRequest(ex.Message);
+                var nombreImagen = Guid.NewGuid().ToString() + ".jpg";
+                ruta = $"Imagenes/{nombreImagen}";
+                using (var stream = new FileStream(ruta, FileMode.Create))
+                {
+                    await archivo.Imagen.CopyToAsync(stream);
+
+                }
             }
+            return ruta;
+
         }
 
     }

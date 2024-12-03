@@ -103,6 +103,16 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
+
+// Configurar para servir archivos estáticos de la carpeta "Imagenes"
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(
+        Path.Combine(Directory.GetCurrentDirectory(), "Imagenes")),
+    RequestPath = "/Imagenes"
+});
+
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
