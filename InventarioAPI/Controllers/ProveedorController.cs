@@ -124,5 +124,37 @@ namespace InventarioAPI.Controllers
 
             return NoContent();
         }
+
+        //Productos por Proveedor
+        [HttpGet("PorProducto/{proveedorId}")]
+        public async Task<ActionResult<IEnumerable<ProductoDTO>>> GetProductosPorProveedor(int proveedorId)
+        {
+            var productos = await _context.Productos
+                .Where(p => p.ProveedorId == proveedorId)  
+                .Select(p => new ProductoDTO
+                {
+                    IdProducto = p.IdProducto,
+                    Nombre = p.Nombre,
+                    Descripcion = p.Descripcion,
+                    Precio = p.Precio,
+                    Stock = p.Stock,
+                    CategoriaId = p.CategoriaId,
+                    ProveedorId = p.ProveedorId,
+                    Imagen = string.IsNullOrEmpty(p.Imagen)
+                        ? null
+                        : $"{Request.Scheme}://{Request.Host}/Imagenes/{Path.GetFileName(p.Imagen)}"
+                })
+                .ToListAsync();
+
+            if (!productos.Any())
+            {
+                return NotFound("No se encontraron productos para este proveedor.");
+            }
+
+            return Ok(productos);  
+        }
+
+
+
     }
 }

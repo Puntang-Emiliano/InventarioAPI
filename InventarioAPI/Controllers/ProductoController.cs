@@ -34,8 +34,8 @@ namespace InventarioAPI.Controllers
                     CategoriaId = p.CategoriaId,
                     ProveedorId = p.ProveedorId,
                     Imagen = string.IsNullOrEmpty(p.Imagen)
-                ? null
-                : $"{Request.Scheme}://{Request.Host}/Imagenes/{Path.GetFileName(p.Imagen)}"
+                            ? null
+                            : $"{Request.Scheme}://{Request.Host}/Imagenes/{Path.GetFileName(p.Imagen)}"
 
                 })
                 .ToListAsync();
@@ -151,6 +151,10 @@ namespace InventarioAPI.Controllers
             if (!string.IsNullOrEmpty(productoDto.Descripcion))
                 productoExistente.Descripcion = productoDto.Descripcion;
 
+            if (productoDto.ProveedorId > 0) 
+                productoExistente.ProveedorId = productoDto.ProveedorId;
+
+
             if (productoDto.Precio >= 0)
                 productoExistente.Precio = productoDto.Precio;
 
@@ -167,25 +171,54 @@ namespace InventarioAPI.Controllers
         }
 
 
-        // Guardar Imagen
+        //// Guardar Imagen
+
+        //[HttpPost("GuardarImagen")]
+        //public async Task<string> GuardarImagen([FromForm] SubirImagen archivo)
+        //{
+        //    var ruta = String.Empty;
+
+        //    if (archivo.Imagen.Length > 0)
+        //    {
+        //        var nombreImagen = Guid.NewGuid().ToString() + ".jpg";
+        //        ruta = $"Imagenes/{nombreImagen}";
+        //        using (var stream = new FileStream(ruta, FileMode.Create))
+        //        {
+        //            await archivo.Imagen.CopyToAsync(stream);
+
+        //        }
+        //    }
+        //    return ruta;
+
+        //}
+
+
 
         [HttpPost("GuardarImagen")]
         public async Task<string> GuardarImagen([FromForm] SubirImagen archivo)
         {
-            var ruta = String.Empty;
+            string rutaRelativa = string.Empty;
 
-            if (archivo.Imagen.Length > 0)
-            {
+            if (archivo.Imagen != null && archivo.Imagen.Length > 0)
+            {                
                 var nombreImagen = Guid.NewGuid().ToString() + ".jpg";
-                ruta = $"Imagenes/{nombreImagen}";
-                using (var stream = new FileStream(ruta, FileMode.Create))
+                var rutaCarpeta = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Imagenes");
+
+                if (!Directory.Exists(rutaCarpeta))
+                {
+                    Directory.CreateDirectory(rutaCarpeta);
+                }
+                var rutaFisica = Path.Combine(rutaCarpeta, nombreImagen);
+
+                using (var stream = new FileStream(rutaFisica, FileMode.Create))
                 {
                     await archivo.Imagen.CopyToAsync(stream);
-
                 }
+                var baseUrl = $"{Request.Scheme}://{Request.Host}";
+                rutaRelativa = $"{baseUrl}/Imagenes/{nombreImagen}";
             }
-            return ruta;
 
+            return rutaRelativa;
         }
 
     }

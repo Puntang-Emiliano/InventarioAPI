@@ -79,6 +79,7 @@ namespace InventarioAPI.Controllers
                     DetalleOrdenCompra = o.DetalleOrdenCompra.Select(d => new DetalleOrdenCompra1DTO
                     {
                         ProductoId = d.ProductoId,
+                       // ProductoNombre = d.Producto.Nombre, 
                         Cantidad = d.Cantidad,
                         PrecioUnitario = d.PrecioUnitario
                     }).ToList()
@@ -123,6 +124,7 @@ namespace InventarioAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> PostOrdenCompra(CrearOrdenCompraDTO crearOrdenDto)
         {
+          
             if (!ValidarEstado(crearOrdenDto.Estado))
             {
                 return BadRequest("El estado debe ser 'Pendiente', 'Completa' o 'Cancelada'.");
@@ -139,6 +141,7 @@ namespace InventarioAPI.Controllers
 
                     if (productoExistente != null)
                     {
+                        // Ajuste del stock cuando el estado es "Procesada"
                         productoExistente.Stock += detalle.Cantidad;
                         _context.Entry(productoExistente).State = EntityState.Modified;
                     }
@@ -155,17 +158,31 @@ namespace InventarioAPI.Controllers
                 Estado = crearOrdenDto.Estado,
                 Total = crearOrdenDto.Total,
                 ProveedorId = crearOrdenDto.ProveedorId,
-                DetalleOrdenCompra = crearOrdenDto.DetalleOrdenCompra.Select(d => new DetalleOrdenCompra
-                {
-                    ProductoId = d.ProductoId,
-                    Cantidad = d.Cantidad,
-                    PrecioUnitario = d.PrecioUnitario
-                }).ToList()
+                DetalleOrdenCompra = new List<DetalleOrdenCompra>()
             };
 
+          
+            foreach (var detalle in crearOrdenDto.DetalleOrdenCompra)
+            {
+                var productoExistente = productosExistentes.FirstOrDefault(p => p.IdProducto == detalle.ProductoId);
+                if (productoExistente != null)
+                {
+                    orden.DetalleOrdenCompra.Add(new DetalleOrdenCompra
+                    {
+                        ProductoId = detalle.ProductoId,
+                        Cantidad = detalle.Cantidad,
+                        PrecioUnitario = productoExistente.Precio
+                    });
+                }
+                else
+                {
+                    return BadRequest($"El producto con ID {detalle.ProductoId} no existe.");
+                }
+            }
             _context.OrdenCompra.Add(orden);
             await _context.SaveChangesAsync();
 
+          
             return CreatedAtAction(nameof(GetOrdenCompra), new { id = orden.IdOrdenCompra }, orden);
         }
 

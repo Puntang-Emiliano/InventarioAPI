@@ -186,36 +186,14 @@ namespace InventarioAPI.Controllers
         }
 
 
-        [HttpPost("IniciarSesion")]
-        public async Task<ActionResult<InicioSesionDTO>> IniciarSesion([FromBody] InicioSesionDTO inicioSesionDto)
-        {
-            
-            using (var sha256 = SHA256.Create())
-            {
-                var hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(inicioSesionDto.contraseña));
-                var contraseñaHash = Convert.ToBase64String(hashBytes);
 
-                
-                var usuarioLogin = await _context.Usuarios
-                    .Include(u => u.Rol) 
-                    .FirstOrDefaultAsync(x => x.Email.Equals(inicioSesionDto.email) && x.Contraseña.Equals(contraseñaHash));
+       
 
-                if (usuarioLogin == null)
-                {
-                    return NotFound("Usuario o contraseña incorrectos");
-                }
 
-                
-                var usuarioResponse = new InicioSesionDTO
-                {
-                    email = usuarioLogin.Email,
-                    Rol = usuarioLogin.Rol.NombreRol 
-                };
 
-                return Ok(usuarioResponse);
-            }
-        }
     }
+
+
 
 }
 

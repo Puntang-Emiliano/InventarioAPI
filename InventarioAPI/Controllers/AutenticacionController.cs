@@ -24,11 +24,11 @@ namespace InventarioAPI.Controllers
             clavesecreta = config.GetSection("settings").GetSection("clavesecreta").ToString();
         }
 
+
         [HttpPost]
         [Route("Validar")]
         public async Task<IActionResult> Validar([FromBody] UsuarioLoginDTO request)
         {
-            
             if (request == null || string.IsNullOrEmpty(request.email) || string.IsNullOrEmpty(request.contraseña))
             {
                 return BadRequest("El email y la contraseña son requeridos.");
@@ -49,13 +49,17 @@ namespace InventarioAPI.Controllers
                 else
                 {
                     var keyBytes = Encoding.ASCII.GetBytes(clavesecreta);
+
+                    // Crear los claims, incluyendo el IdUsuario
                     var claims = new ClaimsIdentity();
                     claims.AddClaim(new Claim(ClaimTypes.NameIdentifier, request.email));
+                    claims.AddClaim(new Claim("IdUsuario", usuarioLogin.IdUsuario.ToString())); // Agregar IdUsuario como claim personalizado
 
+                    // Configurar el token con los claims
                     var tokenDescriptor = new SecurityTokenDescriptor
                     {
                         Subject = claims,
-                        Expires = DateTime.UtcNow.AddMinutes(5),
+                        Expires = DateTime.UtcNow.AddDays(5),
                         SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(keyBytes), SecurityAlgorithms.HmacSha256Signature)
                     };
 
@@ -68,5 +72,6 @@ namespace InventarioAPI.Controllers
                 }
             }
         }
+
     }
 }
