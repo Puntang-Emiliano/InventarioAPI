@@ -69,12 +69,21 @@ namespace InventarioAPI.Controllers
             return Ok(producto);
         }
 
+       
+
         [HttpPost]
-        public async Task<ActionResult<ProductoDTO>> PostProducto([FromBody] CrearProductoDTO crearProductoDto)
+        public async Task<ActionResult<ProductoDTO>> PostProducto([FromForm] CrearProductoDTO crearProductoDto)
         {
             try
             {
-               
+                string imagenUrl = null;
+
+                // Guardar la imagen si se ha enviado
+                if (crearProductoDto.Imagen != null)
+                {
+                    imagenUrl = await GuardarImagen(crearProductoDto.Imagen);
+                }
+
                 var producto = new Producto
                 {
                     Nombre = crearProductoDto.Nombre,
@@ -83,13 +92,12 @@ namespace InventarioAPI.Controllers
                     Stock = crearProductoDto.Stock,
                     CategoriaId = crearProductoDto.CategoriaId,
                     ProveedorId = crearProductoDto.ProveedorId,
-                    Imagen = crearProductoDto.Imagen
+                    Imagen = imagenUrl
                 };
 
                 _context.Productos.Add(producto);
                 await _context.SaveChangesAsync();
 
-               
                 var productoDto = new ProductoDTO
                 {
                     IdProducto = producto.IdProducto,
@@ -114,6 +122,7 @@ namespace InventarioAPI.Controllers
             }
         }
 
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProducto(int id)
         {
@@ -135,6 +144,7 @@ namespace InventarioAPI.Controllers
         }
 
 
+
         [HttpPut("{productoId:int}")]
         public async Task<IActionResult> Modificar([FromBody] ModificarProductoDTO productoDto, [FromRoute] int productoId)
         {
@@ -151,7 +161,7 @@ namespace InventarioAPI.Controllers
             if (!string.IsNullOrEmpty(productoDto.Descripcion))
                 productoExistente.Descripcion = productoDto.Descripcion;
 
-            if (productoDto.ProveedorId > 0) 
+            if (productoDto.ProveedorId > 0)
                 productoExistente.ProveedorId = productoDto.ProveedorId;
 
 
@@ -171,55 +181,36 @@ namespace InventarioAPI.Controllers
         }
 
 
-        //// Guardar Imagen
-
-        //[HttpPost("GuardarImagen")]
-        //public async Task<string> GuardarImagen([FromForm] SubirImagen archivo)
-        //{
-        //    var ruta = String.Empty;
-
-        //    if (archivo.Imagen.Length > 0)
-        //    {
-        //        var nombreImagen = Guid.NewGuid().ToString() + ".jpg";
-        //        ruta = $"Imagenes/{nombreImagen}";
-        //        using (var stream = new FileStream(ruta, FileMode.Create))
-        //        {
-        //            await archivo.Imagen.CopyToAsync(stream);
-
-        //        }
-        //    }
-        //    return ruta;
-
-        //}
 
 
-
-        [HttpPost("GuardarImagen")]
-        public async Task<string> GuardarImagen([FromForm] SubirImagen archivo)
+        public async Task<string> GuardarImagen(IFormFile archivo)
         {
             string rutaRelativa = string.Empty;
 
-            if (archivo.Imagen != null && archivo.Imagen.Length > 0)
-            {                
-                var nombreImagen = Guid.NewGuid().ToString() + ".jpg";
+            if (archivo != null && archivo.Length > 0)
+            {
+                var nombreImagen = Guid.NewGuid().ToString() + Path.GetExtension(archivo.FileName);
                 var rutaCarpeta = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Imagenes");
 
                 if (!Directory.Exists(rutaCarpeta))
                 {
                     Directory.CreateDirectory(rutaCarpeta);
                 }
+
                 var rutaFisica = Path.Combine(rutaCarpeta, nombreImagen);
 
                 using (var stream = new FileStream(rutaFisica, FileMode.Create))
                 {
-                    await archivo.Imagen.CopyToAsync(stream);
+                    await archivo.CopyToAsync(stream);
                 }
+
                 var baseUrl = $"{Request.Scheme}://{Request.Host}";
                 rutaRelativa = $"{baseUrl}/Imagenes/{nombreImagen}";
             }
 
             return rutaRelativa;
         }
+
 
     }
 }

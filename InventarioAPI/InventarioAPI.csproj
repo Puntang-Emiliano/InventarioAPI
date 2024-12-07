@@ -26,7 +26,6 @@
 
   <ItemGroup>
     <None Include="wwwroot\Imagenes\846605f9-f718-4a34-90bb-718a05f04ef7.jpg" />
-    <None Include="wwwroot\Imagenes\8a09da9b-4237-4ce3-8db2-cc3553dfb54e.jpg" />
     <None Include="wwwroot\Imagenes\8ef57ac7-d372-4f9f-9099-24e98bf75fc8.jpg" />
   </ItemGroup>
 
