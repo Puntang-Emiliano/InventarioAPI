@@ -18,61 +18,61 @@ namespace InventarioAPI.Controllers
             _context = context;
         }
 
-        // Obtener todos los pedidos
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<PedidoDTO>>> GetPedidos()
-        {
-            var pedidos = await _context.Pedidos
-                .Include(p => p.DetallePedido)
-                .Select(p => new PedidoDTO
-                {
-                    IdPedido = p.IdPedido,
-                    FechaPedido = p.FechaPedido,
-                    Total = p.Total,
-                    IdUsuario = p.IdUsuario,
-                    Estado = p.Estado,
-                    DetallesPedido = p.DetallePedido.Select(dp => new DetallePedidoDTO
-                    {
-                        IdDetallePedido = dp.IdDetallePedido,
-                        Cantidad = dp.Cantidad,
-                        PrecioUnitario = dp.PrecioUnitario,
-                        ProductoId = dp.ProductoId
-                    }).ToList()
-                }).ToListAsync();
+        //// Obtener todos los pedidos
+        //[HttpGet]
+        //public async Task<ActionResult<IEnumerable<PedidoDTO>>> GetPedidos()
+        //{
+        //    var pedidos = await _context.Pedidos
+        //        .Include(p => p.DetallePedido)
+        //        .Select(p => new PedidoDTO
+        //        {
+        //            IdPedido = p.IdPedido,
+        //            FechaPedido = p.FechaPedido,
+        //            Total = p.Total,
+        //            IdUsuario = p.IdUsuario,
+        //            Estado = p.Estado,
+        //            DetallesPedido = p.DetallePedido.Select(dp => new DetallePedidoDTO
+        //            {
+        //                IdDetallePedido = dp.IdDetallePedido,
+        //                Cantidad = dp.Cantidad,
+        //                PrecioUnitario = dp.PrecioUnitario,
+        //                ProductoId = dp.ProductoId
+        //            }).ToList()
+        //        }).ToListAsync();
 
-            return Ok(pedidos);
-        }
+        //    return Ok(pedidos);
+        //}
 
-        // Obtener un pedido por ID
-        [HttpGet("{id}")]
-        public async Task<ActionResult<PedidoDTO>> GetPedido(int id)
-        {
-            var pedido = await _context.Pedidos
-                .Include(p => p.DetallePedido)
-                .Where(p => p.IdPedido == id)
-                .Select(p => new PedidoDTO
-                {
-                    IdPedido = p.IdPedido,
-                    FechaPedido = p.FechaPedido,
-                    Total = p.Total,
-                    IdUsuario = p.IdUsuario,  
-                    Estado = p.Estado,
-                    DetallesPedido = p.DetallePedido.Select(dp => new DetallePedidoDTO
-                    {
-                        IdDetallePedido = dp.IdDetallePedido,
-                        Cantidad = dp.Cantidad,
-                        PrecioUnitario = dp.PrecioUnitario,
-                        ProductoId = dp.ProductoId
-                    }).ToList()
-                }).FirstOrDefaultAsync();
+        //// Obtener un pedido por ID
+        //[HttpGet("{id}")]
+        //public async Task<ActionResult<PedidoDTO>> GetPedido(int id)
+        //{
+        //    var pedido = await _context.Pedidos
+        //        .Include(p => p.DetallePedido)
+        //        .Where(p => p.IdPedido == id)
+        //        .Select(p => new PedidoDTO
+        //        {
+        //            IdPedido = p.IdPedido,
+        //            FechaPedido = p.FechaPedido,
+        //            Total = p.Total,
+        //            IdUsuario = p.IdUsuario,  
+        //            Estado = p.Estado,
+        //            DetallesPedido = p.DetallePedido.Select(dp => new DetallePedidoDTO
+        //            {
+        //                IdDetallePedido = dp.IdDetallePedido,
+        //                Cantidad = dp.Cantidad,
+        //                PrecioUnitario = dp.PrecioUnitario,
+        //                ProductoId = dp.ProductoId
+        //            }).ToList()
+        //        }).FirstOrDefaultAsync();
 
-            if (pedido == null)
-            {
-                return NotFound();
-            }
+        //    if (pedido == null)
+        //    {
+        //        return NotFound();
+        //    }
 
-            return Ok(pedido);
-        }
+        //    return Ok(pedido);
+        //}
 
         //[HttpPost]
         //public async Task<ActionResult<PedidoDTO>> PostPedido(CrearPedidoDTO crearPedidoDto)
@@ -100,21 +100,108 @@ namespace InventarioAPI.Controllers
         // modificar solo el estado
 
 
+        // Obtener todos los pedidos (sin los detalles)
+
+
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<PedidoDTO>>> GetPedidos()
+        {
+            var pedidos = await _context.Pedidos
+                .Select(p => new PedidoDTO
+                {
+                    IdPedido = p.IdPedido,
+                    FechaPedido = p.FechaPedido,
+                    Total = p.Total,
+                    IdUsuario = p.IdUsuario,
+                    Estado = p.Estado
+                }).ToListAsync();
+
+            return Ok(pedidos);
+        }
+
+        // Obtener un pedido por ID (sin los detalles)
+        [HttpGet("{id}")]
+        public async Task<ActionResult<PedidoDTO>> GetPedido(int id)
+        {
+            var pedido = await _context.Pedidos
+                .Where(p => p.IdPedido == id)
+                .Select(p => new PedidoDTO
+                {
+                    IdPedido = p.IdPedido,
+                    FechaPedido = p.FechaPedido,
+                    Total = p.Total,
+                    IdUsuario = p.IdUsuario,
+                    Estado = p.Estado
+                }).FirstOrDefaultAsync();
+
+            if (pedido == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(pedido);
+        }
+
+
+
+        //[HttpPost]
+        //public async Task<ActionResult<PedidoDTO>> PostPedido(CrearPedidoDTO crearPedidoDto)
+        //{
+        //    var productos = await _context.Productos
+        //                                  .Where(p => crearPedidoDto.DetallesPedido.Select(dp => dp.ProductoId).Contains(p.IdProducto))
+        //                                  .ToListAsync();
+        //    var pedido = new Pedido
+        //    {
+        //        FechaPedido = DateTime.Now,
+        //        Total = 0, 
+        //        IdUsuario = crearPedidoDto.IdUsuario,
+        //        Estado = "Pendiente", // Estado inicial
+        //        DetallePedido = new List<DetallePedido>()
+        //    };
+        //    foreach (var dp in crearPedidoDto.DetallesPedido)
+        //    {
+        //        var producto = productos.FirstOrDefault(p => p.IdProducto == dp.ProductoId);
+
+        //        if (producto == null)
+        //        {
+        //            return BadRequest($"Producto con ID {dp.ProductoId} no encontrado.");
+        //        }
+
+        //        var detalle = new DetallePedido
+        //        {
+        //            Cantidad = dp.Cantidad,
+        //            PrecioUnitario = producto.Precio, 
+        //            ProductoId = dp.ProductoId
+        //        };
+        //        pedido.DetallePedido.Add(detalle);
+
+        //        pedido.Total += detalle.Cantidad * detalle.PrecioUnitario;
+        //    }
+
+        //    _context.Pedidos.Add(pedido);
+        //    await _context.SaveChangesAsync();
+
+        //    return CreatedAtAction(nameof(GetPedido), new { id = pedido.IdPedido }, pedido);
+        //}
+
 
         [HttpPost]
         public async Task<ActionResult<PedidoDTO>> PostPedido(CrearPedidoDTO crearPedidoDto)
         {
+            
             var productos = await _context.Productos
                                           .Where(p => crearPedidoDto.DetallesPedido.Select(dp => dp.ProductoId).Contains(p.IdProducto))
                                           .ToListAsync();
+
             var pedido = new Pedido
             {
                 FechaPedido = DateTime.Now,
-                Total = 0, 
+                Total = 0,
                 IdUsuario = crearPedidoDto.IdUsuario,
                 Estado = "Pendiente", // Estado inicial
                 DetallePedido = new List<DetallePedido>()
             };
+
             foreach (var dp in crearPedidoDto.DetallesPedido)
             {
                 var producto = productos.FirstOrDefault(p => p.IdProducto == dp.ProductoId);
@@ -127,9 +214,11 @@ namespace InventarioAPI.Controllers
                 var detalle = new DetallePedido
                 {
                     Cantidad = dp.Cantidad,
-                    PrecioUnitario = producto.Precio, 
-                    ProductoId = dp.ProductoId
+                    PrecioUnitario = producto.Precio,
+                    ProductoId = dp.ProductoId,
+                    Pedido = pedido // Relacionar el detalle con el pedido
                 };
+
                 pedido.DetallePedido.Add(detalle);
 
                 pedido.Total += detalle.Cantidad * detalle.PrecioUnitario;
@@ -140,6 +229,7 @@ namespace InventarioAPI.Controllers
 
             return CreatedAtAction(nameof(GetPedido), new { id = pedido.IdPedido }, pedido);
         }
+
 
 
 
