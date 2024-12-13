@@ -2,11 +2,13 @@
 using InventarioAPI.DTOs;
 using InventarioAPI.Models;
 using InventarioAPI.ModelsDTO;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace InventarioAPI.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class PedidoController : ControllerBase
@@ -185,23 +187,60 @@ namespace InventarioAPI.Controllers
         //}
 
 
+        //[HttpPost]
+        //public async Task<ActionResult<PedidoDTO>> PostPedido(CrearPedidoDTO crearPedidoDto)
+        //{
+
+        //    var productos = await _context.Productos
+        //                                  .Where(p => crearPedidoDto.DetallesPedido.Select(dp => dp.ProductoId).Contains(p.IdProducto))
+        //                                  .ToListAsync();
+
+        //    var pedido = new Pedido
+        //    {
+        //        FechaPedido = DateTime.Now,
+        //        Total = 0,
+        //        IdUsuario = crearPedidoDto.IdUsuario,
+        //        Estado = "Procesado", 
+        //        DetallePedido = new List<DetallePedido>()
+        //    };
+
+        //    foreach (var dp in crearPedidoDto.DetallesPedido)
+        //    {
+        //        var producto = productos.FirstOrDefault(p => p.IdProducto == dp.ProductoId);
+
+        //        if (producto == null)
+        //        {
+        //            return BadRequest($"Producto con ID {dp.ProductoId} no encontrado.");
+        //        }
+
+        //        var detalle = new DetallePedido
+        //        {
+        //            Cantidad = dp.Cantidad,
+        //            PrecioUnitario = producto.Precio,
+        //            ProductoId = dp.ProductoId,
+        //            Pedido = pedido 
+        //        };
+
+        //        pedido.DetallePedido.Add(detalle);
+
+        //        pedido.Total += detalle.Cantidad * detalle.PrecioUnitario;
+        //    }
+
+        //    _context.Pedidos.Add(pedido);
+        //    await _context.SaveChangesAsync();
+
+        //    return CreatedAtAction(nameof(GetPedido), new { id = pedido.IdPedido }, pedido);
+        //}
+
+
         [HttpPost]
         public async Task<ActionResult<PedidoDTO>> PostPedido(CrearPedidoDTO crearPedidoDto)
         {
-            
             var productos = await _context.Productos
-                                          .Where(p => crearPedidoDto.DetallesPedido.Select(dp => dp.ProductoId).Contains(p.IdProducto))
+                                          .Where(p => crearPedidoDto.DetallesPedido
+                                                            .Select(dp => dp.ProductoId)
+                                                            .Contains(p.IdProducto))
                                           .ToListAsync();
-
-            var pedido = new Pedido
-            {
-                FechaPedido = DateTime.Now,
-                Total = 0,
-                IdUsuario = crearPedidoDto.IdUsuario,
-                Estado = "Pendiente", // Estado inicial
-                DetallePedido = new List<DetallePedido>()
-            };
-
             foreach (var dp in crearPedidoDto.DetallesPedido)
             {
                 var producto = productos.FirstOrDefault(p => p.IdProducto == dp.ProductoId);
@@ -211,12 +250,33 @@ namespace InventarioAPI.Controllers
                     return BadRequest($"Producto con ID {dp.ProductoId} no encontrado.");
                 }
 
+                if (producto.Stock < dp.Cantidad)
+                {
+                    return BadRequest($"Producto con ID {dp.ProductoId} no tiene suficiente stock. Disponible: {producto.Stock}");
+                }
+            }
+
+            var pedido = new Pedido
+            {
+                FechaPedido = DateTime.Now,
+                Total = 0,
+                IdUsuario = crearPedidoDto.IdUsuario,
+                Estado = "Procesado",
+                DetallePedido = new List<DetallePedido>()
+            };
+
+            
+            foreach (var dp in crearPedidoDto.DetallesPedido)
+            {
+                var producto = productos.First(p => p.IdProducto == dp.ProductoId);
+                producto.Stock -= dp.Cantidad;
+
                 var detalle = new DetallePedido
                 {
                     Cantidad = dp.Cantidad,
                     PrecioUnitario = producto.Precio,
                     ProductoId = dp.ProductoId,
-                    Pedido = pedido // Relacionar el detalle con el pedido
+                    Pedido = pedido
                 };
 
                 pedido.DetallePedido.Add(detalle);
@@ -225,6 +285,7 @@ namespace InventarioAPI.Controllers
             }
 
             _context.Pedidos.Add(pedido);
+
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetPedido), new { id = pedido.IdPedido }, pedido);
@@ -285,21 +346,30 @@ namespace InventarioAPI.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePedido(int id)
         {
-            var pedido = await _context.Pedidos.Include(p => p.DetallePedido).FirstOrDefaultAsync(p => p.IdPedido == id);
-
+           
+            var pedido = await _context.Pedidos
+                .Include(p => p.DetallePedido)
+                .FirstOrDefaultAsync(p => p.IdPedido == id);
             if (pedido == null)
             {
                 return NotFound();
+            }
+            if (pedido.Estado == "Procesado")
+            {
+                return BadRequest("No se puede eliminar el pedido porque ya fue procesado.");
             }
             if (pedido.DetallePedido != null && pedido.DetallePedido.Any())
             {
                 _context.DetallePedido.RemoveRange(pedido.DetallePedido);
             }
+
             _context.Pedidos.Remove(pedido);
+
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
+
 
         // metodo para aceptar pedido y descontar stock
         [HttpPut("{id}/aceptar")]

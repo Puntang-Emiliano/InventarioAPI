@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace InventarioAPI.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     
@@ -69,9 +70,10 @@ namespace InventarioAPI.Controllers
             return Ok(producto);
         }
 
-       
+
 
         [HttpPost]
+        [Consumes("multipart/form-data")]
         public async Task<ActionResult<ProductoDTO>> PostProducto([FromForm] CrearProductoDTO crearProductoDto)
         {
             try
@@ -123,20 +125,41 @@ namespace InventarioAPI.Controllers
         }
 
 
+        //[HttpDelete("{id}")]
+        //public async Task<IActionResult> DeleteProducto(int id)
+        //{
+        //    var producto = await _context.Productos.FindAsync(id);
+        //    if (producto == null)
+        //    {
+        //        return NotFound();
+        //    }
+
+        //    _context.Productos.Remove(producto);
+        //    await _context.SaveChangesAsync();
+
+        //    return NoContent();
+        //}
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProducto(int id)
         {
+          
             var producto = await _context.Productos.FindAsync(id);
             if (producto == null)
             {
                 return NotFound();
             }
+            var detallesPedidos = await _context.DetallePedido
+                .Where(dp => dp.ProductoId == id)
+                .ToListAsync();
 
+            _context.DetallePedido.RemoveRange(detallesPedidos);
             _context.Productos.Remove(producto);
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
+
 
         private bool ProductoExists(int id)
         {

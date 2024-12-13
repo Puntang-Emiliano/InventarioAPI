@@ -9,7 +9,7 @@ namespace InventarioAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-  
+
     public class OrdenCompraController : ControllerBase
     {
         private readonly InventarioContex _context;
@@ -76,17 +76,17 @@ namespace InventarioAPI.Controllers
                     Total = o.Total,
                     ProveedorId = o.ProveedorId,
                     NombreProveedor = o.Proveedor.Nombre,
-                    DetalleOrdenCompra = o.DetalleOrdenCompra.Select(d => new DetalleOrdenCompra1DTO
+                    DetalleOrdenCompra = o.DetalleOrdenCompra.Select(detalle => new DetalleOrdenCompra1DTO
                     {
-                        ProductoId = d.ProductoId,
-                       // ProductoNombre = d.Producto.Nombre, 
-                        Cantidad = d.Cantidad,
-                        PrecioUnitario = d.PrecioUnitario
-                    }).ToList()
-                }).ToListAsync();
+                        ProductoId = detalle.ProductoId,
+                        Cantidad = detalle.Cantidad,
+                        PrecioUnitario = detalle.PrecioUnitario
+                    }).ToList() 
+                }).ToListAsync(); 
 
             return Ok(ordenes);
         }
+
 
         // muestra una orden de compra por ID
         [HttpGet("{id}")]
@@ -124,7 +124,7 @@ namespace InventarioAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> PostOrdenCompra(CrearOrdenCompraDTO crearOrdenDto)
         {
-          
+
             if (!ValidarEstado(crearOrdenDto.Estado))
             {
                 return BadRequest("El estado debe ser 'Pendiente', 'Completa' o 'Cancelada'.");
@@ -161,7 +161,7 @@ namespace InventarioAPI.Controllers
                 DetalleOrdenCompra = new List<DetalleOrdenCompra>()
             };
 
-          
+
             foreach (var detalle in crearOrdenDto.DetalleOrdenCompra)
             {
                 var productoExistente = productosExistentes.FirstOrDefault(p => p.IdProducto == detalle.ProductoId);
@@ -182,7 +182,7 @@ namespace InventarioAPI.Controllers
             _context.OrdenCompra.Add(orden);
             await _context.SaveChangesAsync();
 
-          
+
             return CreatedAtAction(nameof(GetOrdenCompra), new { id = orden.IdOrdenCompra }, orden);
         }
 
@@ -227,7 +227,7 @@ namespace InventarioAPI.Controllers
             }
             else if (ordenExistente.Estado == "Completa" && modificarOrdenDto.Estado != "Completa")
             {
-              
+
                 var productosExistentes = await _context.Productos.ToListAsync();
 
                 foreach (var detalle in ordenExistente.DetalleOrdenCompra)
@@ -259,7 +259,7 @@ namespace InventarioAPI.Controllers
 
 
         // Elimina orden compra
-      
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteOrdenCompra(int id)
         {

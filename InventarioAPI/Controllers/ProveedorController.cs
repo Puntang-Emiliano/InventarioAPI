@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace InventarioAPI.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
 

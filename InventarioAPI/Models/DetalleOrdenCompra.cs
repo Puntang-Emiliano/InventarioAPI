@@ -8,6 +8,7 @@ namespace InventarioAPI.Models
         public int IdDetalleOrdenCompra { get; set; }
         public int Cantidad { get; set; }
         public decimal PrecioUnitario { get; set; }
+    
 
         // Relación con OrdenCompra
         public int OrdenCompraId { get; set; }

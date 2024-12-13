@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace InventarioAPI.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
 
@@ -21,7 +22,7 @@ namespace InventarioAPI.Controllers
         }
 
         // trae todas las Categorias
-        [Authorize]
+    
       [HttpGet(Name = "ObtenerTodosCat")]
         public async Task<IActionResult> ObtenerTodos()
         {
